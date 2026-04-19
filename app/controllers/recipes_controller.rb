@@ -1,33 +1,32 @@
+require 'json'
+
 class RecipesController < ApplicationController
   def new
+    # newアクションでも@recipeを初期化しておくと、ビューでの条件分岐がシンプルになります
+    @recipe = nil
   end
 
   def create
-    ingredients = params[:ingredients]
-
-    prompt = <<-PROMPT
-    「#{ingredients}」という食材を使った、家庭で簡単に作れるレシピを1つ提案してください。
-    以下のJSON形式で、キーや値の型も完全に守って応答してください。
-
-    {
-      "recipeName": "料理名",
-      "description": "料理の簡単な説明",
-      "ingredients": [
-        { "name": "材料名", "quantity": "分量" }
-      ],
-      "instructions": [
-        "手順1",
-        "手順2"
-      ]
-    }
-    PROMPT
-
     begin
-      api_key = Rails.application.credentials.dig(:openai, :api_key) || Rails.application.credentials.openai_api_key
-      raise "OpenAI API キーが設定されていません" if api_key.blank?
+      ingredients = params[:ingredients]
+      prompt = <<-PROMPT
+      「#{ingredients}」という食材を使った、家庭で簡単に作れるレシピを1つ提案してください。
+      以下のJSON形式で、キーや値の型も完全に守って応答してください。
 
-      client = OpenAI::Client.new(access_token: api_key)
+      {
+        "recipeName": "料理名",
+        "description": "料理の簡単な説明",
+        "ingredients": [
+          { "name": "材料名", "quantity": "分量" }
+        ],
+        "instructions": [
+          "手順1",
+          "手順2"
+        ]
+      }
+      PROMPT
 
+      client = OpenAI::Client.new
       response = client.chat(
         parameters: {
           model: "gpt-4o-mini",
@@ -36,11 +35,12 @@ class RecipesController < ApplicationController
           temperature: 0.7,
         }
       )
-
       raw_response = response.dig("choices", 0, "message", "content")
       @recipe = JSON.parse(raw_response)
-    rescue => e
-      @error = "レシピの生成に失敗しました: #{e.message}"
+    rescue StandardError => e
+      @error_message = "レシピの生成に失敗しました: #{e.message}"
     end
+
+    render :new, status: :ok
   end
 end
