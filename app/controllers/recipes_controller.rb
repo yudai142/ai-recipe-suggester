@@ -23,7 +23,9 @@ class RecipesController < ApplicationController
     PROMPT
 
     begin
-      api_key = Rails.application.credentials.openai[:api_key]
+      api_key = Rails.application.credentials.dig(:openai, :api_key) || Rails.application.credentials.openai_api_key
+      raise "OpenAI API キーが設定されていません" if api_key.blank?
+
       client = OpenAI::Client.new(access_token: api_key)
 
       response = client.chat(
