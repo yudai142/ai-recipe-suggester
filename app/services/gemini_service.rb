@@ -19,13 +19,13 @@ class GeminiService
     generate_content(prompt)
   end
 
-  private
-
   def generate_content(prompt)
     require 'net/http'
     require 'json'
 
-    uri = URI("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=#{@api_key}")
+    Rails.logger.info "API Key check: #{@api_key.present? ? "Present (#{@api_key[0..5]}...)" : 'Missing'}"
+    
+    uri = URI("https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=#{@api_key}")
     
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
