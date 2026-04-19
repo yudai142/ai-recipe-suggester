@@ -1,5 +1,3 @@
-require "openai"
-
 class RecipesController < ApplicationController
   def new
   end
@@ -25,7 +23,8 @@ class RecipesController < ApplicationController
     PROMPT
 
     begin
-      client = OpenAI::Client.new(api_key: Rails.application.credentials.openai_api_key)
+      api_key = Rails.application.credentials.openai[:api_key]
+      client = OpenAI::Client.new(access_token: api_key)
 
       response = client.chat(
         parameters: {
